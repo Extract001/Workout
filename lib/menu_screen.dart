@@ -69,7 +69,7 @@ class MenuScreen extends StatelessWidget {
                         ),
                       ),
                     ),
-                    sectionHeader("Features", Colors.white),
+                    sectionHeader("Feat", Colors.white),
                     
                     // FIXED: Removed TextButton, passed navigation straight to menuTile
                     menuTile(
