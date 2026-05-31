@@ -22,119 +22,145 @@ class _LanguageScreenState extends State<LanguageScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Getting the screen height dynamically to properly distribute the image space
+    double screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       backgroundColor: Colors.white,
-      body: SafeArea(
-        child: Column(
-          children: [
-            const SizedBox(height: 20),
-            const Text(
-              "Select Language",
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: Colors.black,
-              ),
-            ),
-            const SizedBox(height: 30),
-            
-            Expanded(
-              child: ListView.builder(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                itemCount: languages.length,
-                itemBuilder: (context, index) {
-                  bool isSelected = selectedIndex == index;
+      body: Stack(
+        children: [
+          
+          // LAYER 1: The Content Layer (Title, List, and Button)
+          SafeArea(
+            bottom: false, // Allows content containers to flow nicely downward
+            child: Column(
+              children: [
+                const SizedBox(height: 20),
+                const Text(
+                  "Select Language",
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black,
+                  ),
+                ),
+                const SizedBox(height: 25),
+                
+                // Language Selection List
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    itemCount: languages.length,
+                    itemBuilder: (context, index) {
+                      bool isSelected = selectedIndex == index;
 
-                  return GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        selectedIndex = index;
-                      });
-                    },
-                    child: Container(
-                      margin: const EdgeInsets.only(bottom: 15),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 15,
-                        vertical: 15,
-                      ),
-                      decoration: BoxDecoration(
-                        color: isSelected ? Colors.black : Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: isSelected ? Colors.black : Colors.grey.shade300,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Text(
-                            languages[index]["flag"]!,
-                            style: const TextStyle(fontSize: 28),
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            selectedIndex = index;
+                          });
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 15),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 16,
                           ),
-                          const SizedBox(width: 15),
-                          Expanded(
-                            child: Text(
-                              languages[index]["name"]!,
-                              style: TextStyle(
-                                color: isSelected ? Colors.white : Colors.black,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w500,
-                              ),
+                          decoration: BoxDecoration(
+                            color: isSelected ? Colors.black : Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(
+                              color: isSelected ? Colors.black : Colors.grey.shade300,
+                              width: 1.5,
                             ),
                           ),
-                          Icon(
-                            Icons.arrow_forward_ios,
-                            size: 18,
-                            color: isSelected ? Colors.white : Colors.black,
+                          child: Row(
+                            children: [
+                              Text(
+                                languages[index]["flag"]!,
+                                style: const TextStyle(fontSize: 28),
+                              ),
+                              const SizedBox(width: 20),
+                              Expanded(
+                                child: Text(
+                                  languages[index]["name"]!,
+                                  style: TextStyle(
+                                    color: isSelected ? Colors.white : Colors.black,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                              if (!isSelected)
+                                Icon(
+                                  Icons.arrow_forward_ios,
+                                  size: 16,
+                                  color: Colors.grey.shade700,
+                                )
+                              else
+                                const SizedBox(width: 16), // Keeps sizing balanced when arrow hides
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal:120),
-              child: SizedBox(
-                width: double.infinity,
-                height: 55,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.black,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
+                        ),
+                      );
+                    },
                   ),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const TermsScreen(),
+                ),
+
+                // Next Button
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: SizedBox(
+                    width: 160, // Sized perfectly to match the pill shape in your screenshot
+                    height: 55,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF222222), // Dark slate/black matching your UI
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30), // Fully rounded pill shape
+                        ),
+                        elevation: 0,
                       ),
-                    );
-                  },
-                  child: const Text(
-                    "Next",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const TermsScreen(),
+                          ),
+                        );
+                      },
+                      child: const Text(
+                        "Next",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
+                
+                // This gives dynamic spacing matching the photo layout ratio
+                SizedBox(height: screenHeight * 0.38), 
+              ],
             ),
-            const SizedBox(height: 150),
-            Image.asset("assets/girl-back.png",
-            height: 50,
-            width: 50,
-            fit: BoxFit.contain,
+          ),
+
+          // LAYER 2: Absolute Fixed Bottom Image
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: Image.asset(
+              "assets/girl-back.png",
+              width: double.infinity,
+              height: screenHeight * 0.35, // Allocates roughly 35% of lower screen real estate to the picture
+              fit: BoxFit.cover, // Wipes out margins completely by stretching to edges
             ),
-            const SizedBox(height: 20,
-            ),
-          ],
-        ),
+          ),
+          
+        ],
       ),
     );
   }

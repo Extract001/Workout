@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:work_out_project/exercise_screen.dart';
+import 'package:work_out_project/food_screen.dart';
 import 'menu_screen.dart'; 
+import 'metric_dialogs.dart'; // Imports your clean popup file
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -14,9 +16,10 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentWorkoutIndex = 0;
   final PageController _pageController = PageController(initialPage: 0);
 
-  // Controllers for text fields inside our dialog popup
-  final TextEditingController _weightController = TextEditingController(text: "100");
-  final TextEditingController _repsController = TextEditingController();
+  // Home Screen Native Context Variables
+  int _waterGlassCount = 1;
+  String _selectedGender = "Male";
+  String _selectedActivity = "Sedentary";
 
   final List<Map<String, dynamic>> _workouts = [
     {
@@ -40,129 +43,49 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void dispose() {
     _pageController.dispose();
-    _weightController.dispose();
-    _repsController.dispose();
+    MetricDialogs.disposeControllers(); // Disposes split controllers safely
     super.dispose();
   }
 
-  // Method to open the Custom Metric Dialog Popup
+  // Orchestrator method to open the specific custom dialog layout
   void _showMetricDialog(String metricType, Color themeColor) {
     showDialog(
       context: context,
       barrierDismissible: true,
       builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(32.0),
-          ),
-          elevation: 0,
-          backgroundColor: Colors.white,
-          child: Padding(
-            padding: const EdgeInsets.all(24.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Header with Close Button
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Spacer(),
-                    Text(
-                      "$metricType Lifted",
-                      style: const TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black,
-                      ),
-                    ),
-                    const Spacer(),
-                    GestureDetector(
-                      onTap: () => Navigator.pop(context),
-                      child: const Icon(Icons.close, color: Colors.black45, size: 28),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-
-                // Field 1: Weight input
-                const Text(
-                  "Weight Lifted",
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.black87),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _weightController,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    suffixText: "Kg",
-                    suffixStyle: const TextStyle(color: Colors.black38, fontSize: 16),
-                    filled: true,
-                    fillColor: themeColor.withOpacity(0.06),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      borderSide: BorderSide(color: themeColor.withOpacity(0.4), width: 1.5),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      borderSide: BorderSide(color: themeColor, width: 2),
-                    ),
-                  ),
-                  style: TextStyle(color: themeColor, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 16),
-
-                // Field 2: Reps input
-                const Text(
-                  "Reps Performed",
-                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.black87),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _repsController,
-                  keyboardType: TextInputType.number,
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: Colors.black.withOpacity(0.02),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                    enabledBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      borderSide: BorderSide(color: Colors.black.withOpacity(0.08)),
-                    ),
-                    focusedBorder: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(20),
-                      borderSide: const BorderSide(color: Colors.black, width: 1.5),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                // Calculate Action Button
-                SizedBox(
-                  width: double.infinity,
-                  height: 52,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.black,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(26),
-                      ),
-                      elevation: 0,
-                    ),
-                    child: const Text(
-                      "Calculate",
-                      style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ),
-              ],
+        if (metricType == "Calories") {
+          return StatefulBuilder(
+            builder: (context, setDialogState) => MetricDialogs.buildCaloriesDialog(
+              context: context,
+              setDialogState: setDialogState,
+              selectedGender: _selectedGender,
+              selectedActivity: _selectedActivity,
+              onGenderChanged: (gender) => setState(() => _selectedGender = gender),
+              onActivityChanged: (activity) => setState(() => _selectedActivity = activity),
             ),
-          ),
-        );
+          );
+        } else if (metricType == "BMI") {
+          return MetricDialogs.buildBmiDialog(context, themeColor);
+        } else if (metricType == "Water") {
+          return StatefulBuilder(
+            builder: (context, setDialogState) => MetricDialogs.buildWaterDialog(
+              context: context,
+              setDialogState: setDialogState,
+              currentCount: _waterGlassCount,
+              onIncrement: () {
+                setDialogState(() => _waterGlassCount++);
+                setState(() {});
+              },
+              onDecrement: () {
+                if (_waterGlassCount > 1) {
+                  setDialogState(() => _waterGlassCount--);
+                  setState(() {});
+                }
+              },
+            ),
+          );
+        }
+        return const SizedBox.shrink();
       },
     );
   }
@@ -190,11 +113,11 @@ class _HomeScreenState extends State<HomeScreen> {
           },
         ),
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1.0), // Specifies the height area for the line
+          preferredSize: const Size.fromHeight(1.0),
           child: Container(
-            color: Colors.black.withOpacity(0.08), // Soft grey color that matches your card borders
+            color: Colors.black.withOpacity(0.08),
             height: 1.0,
-      ),
+          ),
         ),
       ),
       body: SingleChildScrollView(
@@ -281,13 +204,13 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 20),
 
-              // Metrics Grid
+              // Metrics Grid Setup
               Row(
                 children: [
                   Expanded(
                     child: _buildMetricCard(
                       "Weight", "102 Kg", Icons.fitness_center, const Color(0xFFEEEDFF), const Color(0xFF6C63FF),
-                      onTap: () => _showMetricDialog("Weight", const Color(0xFF6C63FF)),
+                      onTap: () => _showMetricDialog("BMI", const Color(0xFF6C63FF)), // Reuses setup layout matching Design Mockup
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -300,7 +223,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: _buildMetricCard(
-                      "Water", "4 Glass", Icons.local_drink_outlined, const Color(0xFFFFF8E1), const Color(0xFFFFB300),
+                      "Water", "$_waterGlassCount Glass", Icons.local_drink_outlined, const Color(0xFFFFF8E1), const Color(0xFFFFB300),
                       onTap: () => _showMetricDialog("Water", const Color(0xFFFFB300)),
                     ),
                   ),
@@ -308,58 +231,68 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               const SizedBox(height: 24),
 
-              // UPDATED: Calories Bar Chart Container styling to perfectly mirror metric card borders
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(16.0),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF1EB), // Soft internal fill background color
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    // Uses exact opacity formula layout setup matching the metrics row blocks
-                    color: const Color(0xFFFFA07A).withOpacity(0.25), 
-                    width: 1.5, 
-                  ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text("Calories", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
-                    const SizedBox(height: 24),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        _buildBarChartColumn("SUN", 12),
-                        _buildBarChartColumn("MON", 12),
-                        _buildBarChartColumn("TUE", 12),
-                        _buildBarChartColumn("WED", 45),
-                        _buildBarChartColumn("THU", 70), 
-                        _buildBarChartColumn("FRI", 70),
-                        _buildBarChartColumn("SAT", 12),
-                      ],
+              // Calories Card Container (Now Interactive)
+              InkWell(
+                onTap: () => _showMetricDialog("Calories", const Color(0xFFFFA07A)),
+                borderRadius: BorderRadius.circular(24),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16.0),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF1EB), 
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: const Color(0xFFFFA07A).withOpacity(0.25), 
+                      width: 1.5, 
                     ),
-                  ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text("Calories", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
+                      const SizedBox(height: 24),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        crossAxisAlignment: CrossAxisAlignment.end,
+                        children: [
+                          _buildBarChartColumn("SUN", 12),
+                          _buildBarChartColumn("MON", 12),
+                          _buildBarChartColumn("TUE", 12),
+                          _buildBarChartColumn("WED", 45),
+                          _buildBarChartColumn("THU", 70), 
+                          _buildBarChartColumn("FRI", 70),
+                          _buildBarChartColumn("SAT", 12),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: 24),
 
-              // Featured Exercise
+              // Featured Exercise Layout
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text("Featured Exercise", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black)),
-                  TextButton(onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context)=> const ExerciseScreen()),
+                  TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context, 
+                      MaterialPageRoute(builder: (context) => const ExerciseScreen()),
                     );
                   }, 
-                  child: const Text("See All", style: TextStyle(color: Colors.black54, fontSize: 13,
-                  decoration: TextDecoration.underline,
-                  decorationColor: Colors.black54,
-                  decorationThickness: 1.5,
+                  child: const Text(
+                    "See All", 
+                    style: TextStyle(
+                      color: Colors.black54, 
+                      fontSize: 13,
+                      decoration: TextDecoration.underline,
+                      decorationColor: Colors.black54,
+                      decorationThickness: 1.5,
+                    ),
                   ),
-                  ),
-                  ),
+                ),
                 ],
               ),
               Container(
@@ -389,9 +322,8 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
 
-      // Bottom Navigation Bar
-     bottomNavigationBar: Container(
-        height: 75, // Slightly increased height for native bottom-docked appearance
+      bottomNavigationBar: Container(
+        height: 75, 
         decoration: BoxDecoration(
           color: const Color(0xFFF7F7F9),
           borderRadius: const BorderRadius.only(
@@ -407,14 +339,25 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         child: SafeArea(
-          top: false, // Ensures native system navigation pills on iOS/Android don't clip your icons
+          top: false, 
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              IconButton(
-                icon: Icon(Icons.fitness_center, color: _currentIndex == 0 ? Colors.black : Colors.black38, size: 28),
-                onPressed: () => setState(() => _currentIndex = 0),
-              ),
+           IconButton(
+  icon: Icon(
+    Icons.fitness_center,
+    color: _currentIndex == 0 ? Colors.black : Colors.black38,
+    size: 28,
+  ),
+  onPressed: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const ExerciseScreen(),
+      ),
+    );
+  },
+),
               GestureDetector(
                 onTap: () => setState(() => _currentIndex = 1),
                 child: Container(
@@ -424,14 +367,25 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: const Icon(Icons.home_outlined, color: Colors.white, size: 28),
                 ),
               ),
-              IconButton(
-                icon: Icon(Icons.restaurant_menu_outlined, color: _currentIndex == 2 ? Colors.black : Colors.black38, size: 28),
-                onPressed: () => setState(() => _currentIndex = 2),
-            ),
-          ],
+             IconButton(
+  icon: Icon(
+    Icons.restaurant_menu_outlined,
+    color: _currentIndex == 2 ? Colors.black : Colors.black38,
+    size: 28,
+  ),
+  onPressed: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const FoodScreen(),
+      ),
+    );
+  },
+),
+            ],
+          ),
         ),
       ),
-    ),
     );
   }
 
